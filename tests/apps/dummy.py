@@ -1,7 +1,7 @@
 from spakky.security.key import Key
 from spakky.stereotype.usecase import UseCase
 
-from spakky_typer.stereotypes.api_controller import CliController, command
+from spakky_typer.stereotypes.cli_controller import CliController, command
 
 
 @UseCase()
