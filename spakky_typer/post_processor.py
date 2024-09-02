@@ -6,7 +6,7 @@ from spakky.application.interfaces.post_processor import IPodPostProcessor
 from spakky.pod.order import Order
 from typer import Typer
 
-from spakky_typer.stereotypes.api_controller import CliController, TyperCommand
+from spakky_typer.stereotypes.cli_controller import CliController, TyperCommand
 from spakky_typer.utils.asyncio import run_async
 
 
