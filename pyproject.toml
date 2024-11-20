@@ -55,6 +55,7 @@ disable = """
     missing-module-docstring,
     missing-class-docstring,
     missing-function-docstring,
+    too-many-positional-arguments,
     too-many-instance-attributes,
     too-few-public-methods,
     unnecessary-ellipsis,
