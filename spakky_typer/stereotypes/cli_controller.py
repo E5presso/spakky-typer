@@ -59,7 +59,7 @@ def command(
     return wrapper
 
 
-@dataclass
+@dataclass(eq=False)
 class CliController(Pod):
     group_name: str | None = None
 
