@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "spakky-typer"
-version = "1.0.1"
+version = "1.0.2"
 description = "Highly abstracted Framework core to use DDD & DI/IoC & AOP & Etc..."
 authors = ["Spakky <sejong418@icloud.com>"]
 readme = "README.md"
 
 [tool.poetry.plugins."spakky.plugins"]
-fastapi = "spakky_typer.main:initialize"
+typer = "spakky_typer.main:initialize"
 
 [build-system]
 requires = ["poetry-core"]
