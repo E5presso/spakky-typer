@@ -1,39 +1,66 @@
+from functools import wraps
 from inspect import getmembers, iscoroutinefunction
 from logging import Logger
+from typing import Any
 
-from spakky.application.interfaces.container import IPodContainer
-from spakky.application.interfaces.post_processor import IPodPostProcessor
-from spakky.pod.order import Order
+from spakky.pod.annotations.order import Order
+from spakky.pod.annotations.pod import Pod
+from spakky.pod.interfaces.application_context import IApplicationContext
+from spakky.pod.interfaces.aware.application_context_aware import (
+    IApplicationContextAware,
+)
+from spakky.pod.interfaces.aware.logger_aware import ILoggerAware
+from spakky.pod.interfaces.post_processor import IPostProcessor
 from typer import Typer
 
 from spakky_typer.stereotypes.cli_controller import CliController, TyperCommand
 from spakky_typer.utils.asyncio import run_async
 
 
-@Order(1)
-class TyperCLIPostProcessor(IPodPostProcessor):
+@Order(0)
+@Pod()
+class TyperCLIPostProcessor(IPostProcessor, ILoggerAware, IApplicationContextAware):
     __app: Typer
     __logger: Logger
+    __application_context: IApplicationContext
 
-    def __init__(self, app: Typer, logger: Logger) -> None:
+    def __init__(self, app: Typer) -> None:
         super().__init__()
         self.__app = app
+
+    def set_logger(self, logger: Logger) -> None:
         self.__logger = logger
 
-    def post_process(self, container: IPodContainer, pod: object) -> object:
+    def set_application_context(self, application_context: IApplicationContext) -> None:
+        self.__application_context = application_context
+
+    def post_process(self, pod: object) -> object:
         if not CliController.exists(pod):
             return pod
         controller = CliController.get(pod)
         command_group: Typer = Typer(name=controller.group_name)
-        for _, method in getmembers(pod, callable):
+        for name, method in getmembers(pod, callable):
             command: TyperCommand | None = TyperCommand.get_or_none(method)
             if command is not None:
-                if iscoroutinefunction(method):
-                    method = run_async(method)
                 # pylint: disable=line-too-long
                 self.__logger.info(
                     f"[{type(self).__name__}] {command.name!r} -> {'async' if iscoroutinefunction(method) else ''} {method.__qualname__}"
                 )
+
+                @wraps(method)
+                def endpoint(
+                    *args: Any,
+                    method_name: str = name,
+                    controller_type: type[object] = controller.type_,
+                    context: IApplicationContext = self.__application_context,
+                    **kwargs: Any,
+                ) -> Any:
+                    controller_instance = context.get(controller_type)
+                    method_to_call = getattr(controller_instance, method_name)
+                    if iscoroutinefunction(method_to_call):
+                        method_to_call = run_async(method_to_call)
+                    return method_to_call(*args, **kwargs)
+
                 command_group.command(
                     name=command.name,
                     cls=command.cls,
@@ -47,6 +74,6 @@ class TyperCLIPostProcessor(IPodPostProcessor):
                     hidden=command.hidden,
                     deprecated=command.deprecated,
                     rich_help_panel=command.rich_help_panel,
-                )(method)
+                )(endpoint)
         self.__app.add_typer(command_group)
         return pod

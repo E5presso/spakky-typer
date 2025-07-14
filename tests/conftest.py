@@ -1,17 +1,15 @@
 import logging
+from logging import Formatter, StreamHandler, getLogger
 from typing import Any, Generator
-from logging import Logger, Formatter, StreamHandler, getLogger
 
 import pytest
+from spakky.application.application import SpakkyApplication
 from spakky.application.application_context import ApplicationContext
-from spakky.plugins.aspect import AspectPlugin
-from spakky.plugins.logging import LoggingPlugin
-from spakky.pod.pod import Pod
+from spakky.pod.annotations.pod import Pod
 from spakky.security.key import Key
 from typer import Typer
 from typer.testing import CliRunner
 
-from spakky_typer.plugins.typer_cli import TyperCLIPlugin
 from tests import apps
 
 
@@ -21,42 +19,38 @@ def get_key_fixture() -> Generator[Key, Any, None]:
     yield key
 
 
-@pytest.fixture(name="logger", scope="session")
-def get_logger_fixture() -> Generator[Logger, Any, None]:
-    logger: Logger = getLogger("debug")
+@pytest.fixture(name="cli", scope="function")
+def get_cli_fixture(key: Key) -> Generator[Typer, Any, None]:
+    logger = getLogger("debug")
     logger.setLevel(logging.DEBUG)
     console = StreamHandler()
     console.setLevel(level=logging.DEBUG)
-    console.setFormatter(Formatter("[%(levelname)s] (%(asctime)s) : %(message)s"))
+    console.setFormatter(Formatter("[%(levelname)s][%(asctime)s]: %(message)s"))
     logger.addHandler(console)
-
-    yield logger
-
-    logger.removeHandler(console)
-
-
-@pytest.fixture(name="app", scope="function")
-def get_app_fixture(key: Key, logger: Logger) -> Generator[Typer, Any, None]:
-    @Pod(name="logger")
-    def get_logger() -> Logger:
-        return logger
 
     @Pod(name="key")
     def get_key() -> Key:
         return key
 
-    app: Typer = Typer()
-    context: ApplicationContext = ApplicationContext(package=apps)
+    @Pod(name="cli")
+    def get_cli() -> Typer:
+        return Typer()
 
-    context.register_plugin(LoggingPlugin())
-    context.register_plugin(TyperCLIPlugin(app, logger))
-    context.register_plugin(AspectPlugin(logger))
+    app = (
+        SpakkyApplication(ApplicationContext(logger))
+        .load_plugins()
+        .enable_async_logging()
+        .enable_logging()
+        .scan(apps)
+        .add(get_key)
+        .add(get_cli)
+    )
+    app.start()
 
-    context.register(get_logger)
-    context.register(get_key)
+    yield app.container.get(type_=Typer)
 
-    context.start()
-    yield app
+    app.stop()
+    logger.removeHandler(console)
 
 
 @pytest.fixture(name="runner", scope="function")

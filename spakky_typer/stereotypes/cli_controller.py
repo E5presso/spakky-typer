@@ -1,9 +1,9 @@
-from typing import Any, Callable
 from dataclasses import dataclass
+from typing import Any, Callable
 
 from spakky.core.annotation import FunctionAnnotation
 from spakky.core.types import AnyT, FuncT
-from spakky.pod.pod import Pod
+from spakky.pod.annotations.pod import Pod
 from typer.core import TyperCommand as TyperCommandClass
 from typer.models import Default
 
