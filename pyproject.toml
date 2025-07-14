@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "spakky-typer"
-version = "0.7.0"
+version = "1.0.0"
 description = "Highly abstracted Framework core to use DDD & DI/IoC & AOP & Etc..."
 authors = ["Spakky <sejong418@icloud.com>"]
 readme = "README.md"
+
+[tool.poetry.plugins."spakky.plugins"]
+fastapi = "spakky_typer.main:initialize"
 
 [build-system]
 requires = ["poetry-core"]
@@ -11,7 +14,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dependencies]
 python = ">=3.10"
-spakky-core = "^1.8"
+spakky-core = ">=2.10"
 typer = { extras = ["all"], version = "^0.13" }
 
 [tool.poetry.group.dev.dependencies]
@@ -20,54 +23,21 @@ black = "^24.10.0"
 isort = "^5.12.0"
 pytest = "^7.4.3"
 pytest-cov = "^4.1.0"
-
 toml = "^0.10.2"
+ruff = "^0.9.6"
+pre-commit = "^4.1.0"
+
 [tool.poetry.group.ci.dependencies]
-pylint = "^3.0.2"
 pytest = "^7.4.3"
 pytest-cov = "^4.1.0"
+ruff = "^0.9.6"
 
-[tool.black]
-line-length = 90
-target-version = ["py310"]
-include = '\.pyi?$'
-
-[tool.isort]
-py_version = 310
-src_paths = ["spakky_typer", "tests"]
-skip = [".venv", ".gitignore", ".dockerignore"]
-extend_skip = [".md", ".json", ".txt"]
-profile = "black"
-combine_as_imports = true
-remove_redundant_aliases = true
-length_sort_sections = ["future", "stdlib"]
-
-[tool.pylint]
-ignore-paths = [".venv", "tests"]
-
-[tool.pylint.'MESSAGES CONTROL']
-max-line-length = 90
-disable = """
-    no-member,
-    arguments-differ,
-    invalid-field-call,
-    too-many-arguments,
-    missing-module-docstring,
-    missing-class-docstring,
-    missing-function-docstring,
-    too-many-positional-arguments,
-    too-many-instance-attributes,
-    too-few-public-methods,
-    unnecessary-ellipsis,
-    redefined-builtin,
-    too-many-locals,
-    multiple-statements,
-    consider-using-f-string,
-    duplicate-code,
-"""
+[tool.ruff]
+builtins = ["_"]
+cache-dir = "~/.cache/ruff"
 
 [tool.pytest.ini_options]
-pythonpath = "spakky"
+pythonpath = "spakky_typer"
 testpaths = "tests"
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
@@ -83,7 +53,6 @@ addopts = """
 
 [tool.coverage.run]
 omit = ["tests/*"]
-traceback = "short"
 branch = true
 
 [tool.coverage.report]
