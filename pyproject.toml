@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spakky-typer"
-version = "1.0.3"
+version = "1.0.4"
 description = "Highly abstracted Framework core to use DDD & DI/IoC & AOP & Etc..."
 authors = ["Spakky <sejong418@icloud.com>"]
 readme = "README.md"
@@ -15,7 +15,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.dependencies]
 python = ">=3.10"
 spakky-core = ">=2.10"
-typer = { extras = ["all"], version = "^0.13" }
+typer = { extras = ["all"], version = ">=0.15" }
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.0.2"
